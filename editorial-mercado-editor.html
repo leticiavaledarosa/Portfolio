@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Editorial de Mercado · Editor (Demo)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@100;200;300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --rosa:#C08081;--rosa-deep:#9C6566;--rosa-pale:#F5E8E8;
+  --ink:#2E2E2E;--ink-2:#5a4f4f;--ink-3:#8a8080;
+  --paper:#F5F5F5;--paper-2:#ffffff;
+  --line:rgba(46,46,46,0.09);--muted:rgba(46,46,46,0.48);--muted-2:rgba(46,46,46,0.32);
+  --tag1:#A8B0C9;--tag1-text:#2C3550;
+  --tag2:#C9B89A;--tag2-text:#5C4A2C;
+  --tag3:#A8C9B0;--tag3-text:#2C5C3A;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Sora',system-ui,sans-serif;font-size:14px;font-weight:300;line-height:1.55;color:var(--ink);background:var(--paper);-webkit-font-smoothing:antialiased;}
+em{font-style:normal;font-weight:500;color:var(--rosa-deep);}
+
+.topbar{background:var(--ink);padding:14px 32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+.topbar__title{color:#fff;font-size:14px;font-weight:500;letter-spacing:-0.01em;}
+.topbar__title em{color:var(--rosa);}
+.topbar__actions{display:flex;gap:8px;flex-wrap:wrap;}
+.btn{font-size:10px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;padding:9px 18px;border-radius:99px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:rgba(255,255,255,0.7);cursor:pointer;transition:all .15s;}
+.btn:hover{border-color:var(--rosa);color:#fff;}
+.btn--primary{background:var(--rosa);border-color:var(--rosa);color:#fff;}
+.btn--primary:hover{background:var(--rosa-deep);}
+
+.tabs{background:var(--paper-2);border-bottom:1px solid var(--line);display:flex;gap:4px;padding:0 32px;}
+.tab{font-size:11px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;padding:14px 22px;border:none;background:none;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;}
+.tab:hover{color:var(--ink);}
+.tab.active{color:var(--rosa-deep);border-bottom-color:var(--rosa-deep);}
+
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+.metabar{background:var(--paper-2);padding:16px 32px;border-bottom:1px solid var(--line);display:flex;gap:24px;flex-wrap:wrap;align-items:flex-end;}
+.metabar__field{display:flex;flex-direction:column;gap:4px;}
+.metabar__field label{font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);font-weight:600;}
+.metabar__field input,.metabar__field select{font-family:'Sora',sans-serif;font-size:13px;padding:7px 12px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink);min-width:160px;}
+.metabar__field input:focus,.metabar__field select:focus{outline:none;border-color:var(--rosa);}
+
+.palette-field{display:flex;flex-direction:column;gap:6px;}
+.palette-field label{font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);font-weight:600;}
+.palette-options{display:flex;gap:8px;align-items:center;}
+.palette-swatch{display:flex;gap:3px;padding:4px;border:2px solid transparent;border-radius:8px;cursor:pointer;transition:border-color .15s;}
+.palette-swatch:hover{border-color:var(--line);}
+.palette-swatch.active{border-color:var(--rosa-deep);}
+.palette-swatch span{width:16px;height:16px;border-radius:4px;display:block;}
+.palette-custom{display:flex;gap:4px;align-items:center;}
+.palette-custom input[type=color]{width:28px;height:28px;border:1px solid var(--line);border-radius:6px;padding:0;cursor:pointer;background:none;}
+
+.editor-wrap{padding:32px;max-width:1320px;margin:0 auto;}
+.editor-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+@media(max-width:980px){.editor-grid{grid-template-columns:1fr;}}
+
+.card{background:var(--paper-2);border:1px solid var(--line);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:14px;}
+.card__name{font-size:13px;font-weight:600;color:var(--ink);padding:8px 12px;border:1px solid var(--line);border-radius:6px;background:var(--paper);width:100%;font-family:'Sora',sans-serif;}
+.card__name:focus{outline:none;border-color:var(--rosa);}
+
+.upload-box{aspect-ratio:1200/480;border:2px dashed var(--line);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--paper);cursor:pointer;transition:border-color .15s;text-align:center;padding:12px;overflow:hidden;position:relative;}
+.upload-box:hover{border-color:var(--rosa);}
+.upload-box svg{width:24px;height:24px;color:var(--muted-2);}
+.upload-box span{font-size:11px;color:var(--muted);font-weight:500;}
+.upload-box small{font-size:9px;color:var(--muted-2);letter-spacing:0.08em;text-transform:uppercase;}
+.upload-box img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;}
+.upload-box input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;}
+
+.tags-row{display:flex;gap:6px;}
+.tag-input{flex:1;font-size:10px;padding:6px 10px;border:none;border-radius:99px;text-align:center;font-family:'Sora',sans-serif;font-weight:600;}
+.tag-input:focus{outline:2px solid var(--rosa-deep);}
+.tag-input::placeholder{color:inherit;opacity:0.6;}
+.tag-input.t1{background:var(--tag1);color:var(--tag1-text);}
+.tag-input.t2{background:var(--tag2);color:var(--tag2-text);}
+.tag-input.t3{background:var(--tag3);color:var(--tag3-text);}
+
+.field{display:flex;flex-direction:column;gap:4px;}
+.field label{font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);font-weight:600;}
+.field input,.field textarea{font-family:'Sora',sans-serif;font-size:13px;padding:8px 12px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink);resize:vertical;}
+.field input:focus,.field textarea:focus{outline:none;border-color:var(--rosa);}
+.field textarea.resumo{min-height:50px;}
+.field textarea.artigo{min-height:140px;}
+
+.editor-actions{display:flex;gap:12px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap;}
+
+/* PREVIEW A4 */
+.preview-wrap{padding:32px;display:flex;flex-direction:column;align-items:center;gap:20px;}
+.preview-label{display:flex;align-items:center;justify-content:space-between;gap:10px;width:210mm;max-width:100%;flex-wrap:wrap;}
+.preview-label__left{display:flex;align-items:center;gap:10px;font-size:10px;letter-spacing:0.28em;text-transform:uppercase;color:var(--muted);font-weight:600;}
+.preview-label__left::before{content:'';width:24px;height:2px;background:var(--rosa-deep);flex-shrink:0;}
+
+.a4-sheet{width:210mm;min-height:297mm;background:var(--paper-2);box-shadow:0 4px 24px rgba(46,46,46,0.12);padding:14mm 12mm;display:flex;flex-direction:column;}
+@media(max-width:880px){
+  .a4-sheet{width:100%;min-height:auto;padding:8mm;transform:none;}
+}
+
+.a4-header{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid var(--ink);padding-bottom:8mm;margin-bottom:8mm;}
+.a4-header__title{font-size:22pt;font-weight:600;letter-spacing:-0.01em;color:var(--ink);line-height:1.1;}
+.a4-header__title em{color:var(--rosa-deep);}
+.a4-header__meta{text-align:right;font-size:8pt;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;font-weight:600;line-height:1.6;}
+
+.a4-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6mm;flex:1;}
+@media(max-width:880px){.a4-grid{grid-template-columns:1fr;}}
+
+.a4-article{display:flex;flex-direction:column;gap:3mm;}
+.a4-article__img{aspect-ratio:1200/480;border-radius:2mm;background:var(--paper);overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--muted-2);font-size:7pt;letter-spacing:0.18em;text-transform:uppercase;font-weight:600;}
+.a4-article__img img{width:100%;height:100%;object-fit:cover;display:none;}
+.a4-article__tags{display:flex;gap:1.5mm;flex-wrap:wrap;}
+.a4-article__tags span{font-size:6.5pt;padding:0.8mm 2.4mm;border-radius:99px;font-weight:600;letter-spacing:0.03em;}
+.a4-article__tags span.t1{background:var(--tag1);color:var(--tag1-text);}
+.a4-article__tags span.t2{background:var(--tag2);color:var(--tag2-text);}
+.a4-article__tags span.t3{background:var(--tag3);color:var(--tag3-text);}
+.a4-article__title{font-size:12pt;font-weight:600;color:var(--ink);letter-spacing:-0.01em;line-height:1.25;}
+.a4-article__resumo{font-size:8.5pt;color:var(--ink-2);line-height:1.55;}
+.a4-article__body{font-size:7.5pt;color:var(--ink-2);line-height:1.6;flex:1;}
+.a4-article__footer{display:flex;align-items:center;justify-content:space-between;padding-top:2mm;border-top:0.3mm dashed var(--line);margin-top:auto;}
+.a4-article__author{display:flex;align-items:center;gap:1.5mm;}
+.a4-article__avatar{width:5.5mm;height:5.5mm;border-radius:50%;background:var(--rosa-pale);color:var(--rosa-deep);display:flex;align-items:center;justify-content:center;font-size:6.5pt;font-weight:700;flex-shrink:0;}
+.a4-article__author-name{font-size:7pt;font-weight:600;color:var(--ink);}
+.a4-article__source{font-size:6.5pt;color:var(--muted-2);letter-spacing:0.03em;}
+
+.a4-footer{margin-top:8mm;padding-top:4mm;border-top:0.3mm solid var(--line);text-align:center;font-size:7pt;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted-2);font-weight:600;}
+.a4-footer em{color:var(--rosa-deep);}
+
+.publish-bar{padding:18px 24px;background:var(--ink);border-radius:10px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;width:210mm;max-width:100%;}
+.publish-bar__text{font-size:13px;color:rgba(255,255,255,0.7);}
+.publish-bar__text em{color:var(--rosa);}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(46,46,46,0.5);z-index:100;align-items:center;justify-content:center;padding:24px;}
+.modal-overlay.open{display:flex;}
+.modal-box{background:var(--paper-2);border-radius:12px;max-width:640px;width:100%;max-height:85vh;overflow-y:auto;padding:32px;}
+.modal-box__close{float:right;background:none;border:none;font-size:18px;color:var(--muted);cursor:pointer;line-height:1;}
+.modal-box__close:hover{color:var(--ink);}
+.modal-box__tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+.modal-box__tags span{font-size:9px;padding:2px 9px;border-radius:99px;font-weight:600;letter-spacing:0.04em;}
+.modal-box__tags span.t1{background:var(--tag1);color:var(--tag1-text);}
+.modal-box__tags span.t2{background:var(--tag2);color:var(--tag2-text);}
+.modal-box__tags span.t3{background:var(--tag3);color:var(--tag3-text);}
+.modal-box__title{font-size:24px;font-weight:600;letter-spacing:-0.01em;color:var(--ink);margin-bottom:6px;clear:both;}
+.modal-box__meta{font-size:11px;color:var(--muted);margin-bottom:20px;}
+.modal-box__img{aspect-ratio:1200/480;border-radius:8px;background:var(--paper);margin-bottom:20px;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--muted-2);font-size:11px;letter-spacing:0.18em;text-transform:uppercase;font-weight:600;}
+.modal-box__img img{width:100%;height:100%;object-fit:cover;display:none;}
+.modal-box__body{font-size:14px;color:var(--ink-2);line-height:1.8;white-space:pre-wrap;}
+.modal-box__source{margin-top:20px;padding-top:14px;border-top:1px solid var(--line);font-size:11px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;font-weight:600;}
+
+@media print{
+  .topbar,.tabs,.metabar,.preview-label,.publish-bar{display:none !important;}
+  .preview-wrap{padding:0;}
+  .a4-sheet{box-shadow:none;width:auto;min-height:auto;}
+  body{background:#fff;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar__title">Editorial de Mercado <em>&middot; Editor</em></div>
+  <div class="topbar__actions">
+    <button class="btn">Salvar rascunho</button>
+    <button class="btn" onclick="window.print()">Imprimir / Salvar PDF</button>
+    <button class="btn">Limpar tudo</button>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" data-tab="editor" onclick="showTab('editor')">Editor</button>
+  <button class="tab" data-tab="preview" onclick="showTab('preview')">Previa</button>
+</div>
+
+<div id="panel-editor" class="tab-panel active">
+
+  <div class="metabar">
+    <div class="metabar__field">
+      <label>Edicao</label>
+      <input type="text" value="01" placeholder="Número da edicao">
+    </div>
+    <div class="metabar__field">
+      <label>Mes / Ano</label>
+      <input type="text" value="Junho 2026" placeholder="Mes / Ano">
+    </div>
+    <div class="metabar__field">
+      <label>Setor</label>
+      <select>
+        <option>Inteligencia de Mercado</option>
+        <option>Estrategia</option>
+        <option>Novos Negócios</option>
+      </select>
+    </div>
+    <div class="palette-field">
+      <label>Cores das tags</label>
+      <div class="palette-options">
+        <div class="palette-swatch active" onclick="setPalette(this,'#A8B0C9','#2C3550','#C9B89A','#5C4A2C','#A8C9B0','#2C5C3A')">
+          <span style="background:#A8B0C9"></span><span style="background:#C9B89A"></span><span style="background:#A8C9B0"></span>
+        </div>
+        <div class="palette-swatch" onclick="setPalette(this,'#E8C9C0','#7A3D2E','#D9C9A8','#5C4A2C','#C0CFD9','#2C4A5C')">
+          <span style="background:#E8C9C0"></span><span style="background:#D9C9A8"></span><span style="background:#C0CFD9"></span>
+        </div>
+        <div class="palette-swatch" onclick="setPalette(this,'#D4C5E0','#4A3461','#C5DBC9','#2C5C3A','#F0D9B5','#7A4F1A')">
+          <span style="background:#D4C5E0"></span><span style="background:#C5DBC9"></span><span style="background:#F0D9B5"></span>
+        </div>
+        <div class="palette-custom">
+          <input type="color" value="#A8B0C9" onchange="setCustom(0,this.value)" title="Cor da Tag 1">
+          <input type="color" value="#C9B89A" onchange="setCustom(1,this.value)" title="Cor da Tag 2">
+          <input type="color" value="#A8C9B0" onchange="setCustom(2,this.value)" title="Cor da Tag 3">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="editor-wrap">
+    <div class="editor-grid">
+
+      <div class="card">
+        <input class="card__name" type="text" placeholder="Nome 01">
+        <label class="upload-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>
+          <span>Clique para subir</span>
+          <small>JPG &middot; PNG &middot; 1200x480px</small>
+          <img id="img-preview-1">
+          <input type="file" accept="image/*" onchange="previewImage(event,1)">
+        </label>
+        <div class="tags-row">
+          <input class="tag-input t1" type="text" placeholder="Tag 1">
+          <input class="tag-input t2" type="text" placeholder="Tag 2">
+          <input class="tag-input t3" type="text" placeholder="Tag 3">
+        </div>
+        <div class="field">
+          <label>Titulo</label>
+          <input type="text" placeholder="Titulo do artigo">
+        </div>
+        <div class="field">
+          <label>Resumo (capa)</label>
+          <textarea class="resumo" placeholder="Resumo que aparece na capa"></textarea>
+        </div>
+        <div class="field">
+          <label>Artigo completo</label>
+          <textarea class="artigo" placeholder="Texto completo do artigo"></textarea>
+        </div>
+        <div class="field">
+          <label>Fonte</label>
+          <input type="text" placeholder="Fonte da informacao">
+        </div>
+      </div>
+
+      <div class="card">
+        <input class="card__name" type="text" placeholder="Nome 02">
+        <label class="upload-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>
+          <span>Clique para subir</span>
+          <small>JPG &middot; PNG &middot; 1200x480px</small>
+          <img id="img-preview-2">
+          <input type="file" accept="image/*" onchange="previewImage(event,2)">
+        </label>
+        <div class="tags-row">
+          <input class="tag-input t1" type="text" placeholder="Tag 1">
+          <input class="tag-input t2" type="text" placeholder="Tag 2">
+          <input class="tag-input t3" type="text" placeholder="Tag 3">
+        </div>
+        <div class="field">
+          <label>Titulo</label>
+          <input type="text" placeholder="Titulo do artigo">
+        </div>
+        <div class="field">
+          <label>Resumo (capa)</label>
+          <textarea class="resumo" placeholder="Resumo que aparece na capa"></textarea>
+        </div>
+        <div class="field">
+          <label>Artigo completo</label>
+          <textarea class="artigo" placeholder="Texto completo do artigo"></textarea>
+        </div>
+        <div class="field">
+          <label>Fonte</label>
+          <input type="text" placeholder="Fonte da informacao">
+        </div>
+      </div>
+
+      <div class="card">
+        <input class="card__name" type="text" placeholder="Nome 03">
+        <label class="upload-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>
+          <span>Clique para subir</span>
+          <small>JPG &middot; PNG &middot; 1200x480px</small>
+          <img id="img-preview-3">
+          <input type="file" accept="image/*" onchange="previewImage(event,3)">
+        </label>
+        <div class="tags-row">
+          <input class="tag-input t1" type="text" placeholder="Tag 1">
+          <input class="tag-input t2" type="text" placeholder="Tag 2">
+          <input class="tag-input t3" type="text" placeholder="Tag 3">
+        </div>
+        <div class="field">
+          <label>Titulo</label>
+          <input type="text" placeholder="Titulo do artigo">
+        </div>
+        <div class="field">
+          <label>Resumo (capa)</label>
+          <textarea class="resumo" placeholder="Resumo que aparece na capa"></textarea>
+        </div>
+        <div class="field">
+          <label>Artigo completo</label>
+          <textarea class="artigo" placeholder="Texto completo do artigo"></textarea>
+        </div>
+        <div class="field">
+          <label>Fonte</label>
+          <input type="text" placeholder="Fonte da informacao">
+        </div>
+      </div>
+
+    </div>
+
+    <div class="editor-actions">
+      <button class="btn btn--primary" onclick="showTab('preview')">Ver previa &rarr;</button>
+    </div>
+  </div>
+
+</div>
+
+<div id="panel-preview" class="tab-panel">
+  <div class="preview-wrap">
+    <div class="preview-label">
+      <div class="preview-label__left">Previa &middot; folha A4</div>
+      <button class="btn btn--primary" onclick="alert('Demo: em produção, isso pública via GitHub API.')">Publicar</button>
+    </div>
+
+    <div class="a4-sheet" id="a4sheet">
+      <div class="a4-header">
+        <div class="a4-header__title">Editorial de <em>Mercado</em></div>
+        <div class="a4-header__meta" id="a4-meta">Edicao 01<br>Junho 2026</div>
+      </div>
+
+      <div class="a4-grid">
+        <div class="a4-article">
+          <div class="a4-article__img" id="a4-img-1">Imagem 1200x480</div>
+          <div class="a4-article__tags" id="a4-tags-1">
+            <span class="t1"></span><span class="t2"></span><span class="t3"></span>
+          </div>
+          <div class="a4-article__title" id="a4-title-1"></div>
+          <div class="a4-article__resumo" id="a4-resumo-1"></div>
+          <div class="a4-article__body" id="a4-body-1"></div>
+          <div class="a4-article__footer">
+            <div class="a4-article__author">
+              <div class="a4-article__avatar" id="a4-avatar-1"></div>
+              <div class="a4-article__author-name" id="a4-author-1"></div>
+            </div>
+            <div class="a4-article__source" id="a4-source-1"></div>
+          </div>
+          <div style="text-align:right;margin-top:1mm;">
+            <a href="#" class="a4-article__source" style="text-decoration:underline;cursor:pointer;color:var(--rosa-deep);" onclick="openArticle(event,1)">Ler artigo completo</a>
+          </div>
+        </div>
+
+        <div class="a4-article">
+          <div class="a4-article__img" id="a4-img-2">Imagem 1200x480</div>
+          <div class="a4-article__tags" id="a4-tags-2">
+            <span class="t1"></span><span class="t2"></span><span class="t3"></span>
+          </div>
+          <div class="a4-article__title" id="a4-title-2"></div>
+          <div class="a4-article__resumo" id="a4-resumo-2"></div>
+          <div class="a4-article__body" id="a4-body-2"></div>
+          <div class="a4-article__footer">
+            <div class="a4-article__author">
+              <div class="a4-article__avatar" id="a4-avatar-2"></div>
+              <div class="a4-article__author-name" id="a4-author-2"></div>
+            </div>
+            <div class="a4-article__source" id="a4-source-2"></div>
+          </div>
+          <div style="text-align:right;margin-top:1mm;">
+            <a href="#" class="a4-article__source" style="text-decoration:underline;cursor:pointer;color:var(--rosa-deep);" onclick="openArticle(event,2)">Ler artigo completo</a>
+          </div>
+        </div>
+
+        <div class="a4-article">
+          <div class="a4-article__img" id="a4-img-3">Imagem 1200x480</div>
+          <div class="a4-article__tags" id="a4-tags-3">
+            <span class="t1"></span><span class="t2"></span><span class="t3"></span>
+          </div>
+          <div class="a4-article__title" id="a4-title-3"></div>
+          <div class="a4-article__resumo" id="a4-resumo-3"></div>
+          <div class="a4-article__body" id="a4-body-3"></div>
+          <div class="a4-article__footer">
+            <div class="a4-article__author">
+              <div class="a4-article__avatar" id="a4-avatar-3"></div>
+              <div class="a4-article__author-name" id="a4-author-3"></div>
+            </div>
+            <div class="a4-article__source" id="a4-source-3"></div>
+          </div>
+          <div style="text-align:right;margin-top:1mm;">
+            <a href="#" class="a4-article__source" style="text-decoration:underline;cursor:pointer;color:var(--rosa-deep);" onclick="openArticle(event,3)">Ler artigo completo</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="a4-footer">Editorial de Mercado &middot; Criado por <em>Leticia Vale da Rosa</em> &middot; Demo</div>
+    </div>
+
+    <div class="publish-bar">
+      <div class="publish-bar__text">Ao publicar, o conteudo e enviado via <em>GitHub API</em> e a pagina e atualizada automaticamente.</div>
+      <button class="btn btn--primary" onclick="alert('Demo: em produção, isso pública via GitHub API.')">Publicar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="article-modal" onclick="if(event.target===this) closeArticle()">
+  <div class="modal-box">
+    <button class="modal-box__close" onclick="closeArticle()">&times;</button>
+    <div class="modal-box__tags" id="modal-tags"></div>
+    <div class="modal-box__title" id="modal-title"></div>
+    <div class="modal-box__meta" id="modal-meta"></div>
+    <div class="modal-box__img" id="modal-img">Imagem 1200x480</div>
+    <div class="modal-box__body" id="modal-body"></div>
+    <div class="modal-box__source" id="modal-source"></div>
+  </div>
+</div>
+
+<script>
+function showTab(name){
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelector('.tab[data-tab="' + name + '"]').classList.add('active');
+  document.getElementById('panel-' + name).classList.add('active');
+  if(name === 'preview'){ syncFields(); }
+}
+
+function previewImage(event, n){
+  var file = event.target.files[0];
+  if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var img = document.getElementById('img-preview-' + n);
+    img.src = e.target.result;
+    img.style.display = 'block';
+    var a4Img = document.getElementById('a4-img-' + n);
+    a4Img.innerHTML = '<img src="' + e.target.result + '" style="display:block">';
+  };
+  reader.readAsDataURL(file);
+}
+
+function setPalette(el, c1, t1, c2, t2, c3, t3){
+  document.querySelectorAll('.palette-swatch').forEach(function(s){ s.classList.remove('active'); });
+  el.classList.add('active');
+  document.documentElement.style.setProperty('--tag1', c1);
+  document.documentElement.style.setProperty('--tag1-text', t1);
+  document.documentElement.style.setProperty('--tag2', c2);
+  document.documentElement.style.setProperty('--tag2-text', t2);
+  document.documentElement.style.setProperty('--tag3', c3);
+  document.documentElement.style.setProperty('--tag3-text', t3);
+}
+
+function setCustom(idx, color){
+  document.querySelectorAll('.palette-swatch').forEach(function(s){ s.classList.remove('active'); });
+  var varName = '--tag' + (idx+1);
+  document.documentElement.style.setProperty(varName, color);
+}
+
+function syncFields(){
+  var edicao = document.querySelector('.metabar__field input[type="text"]').value || '01';
+  var mesAno = document.querySelectorAll('.metabar__field input[type="text"]')[1].value || '';
+  document.getElementById('a4-meta').innerHTML = 'Edicao ' + edicao + '<br>' + mesAno;
+
+  for(var i=1; i<=3; i++){
+    var card = document.querySelectorAll('.editor-grid .card')[i-1];
+    var title = card.querySelector('.field input').value;
+    var resumo = card.querySelector('textarea.resumo').value;
+    var artigo = card.querySelector('textarea.artigo').value;
+    var name = card.querySelector('.card__name').value;
+    var tags = card.querySelectorAll('.tag-input');
+    var fieldsArr = card.querySelectorAll('.field');
+    var fonte = fieldsArr[fieldsArr.length-1].querySelector('input').value;
+
+    document.getElementById('a4-title-' + i).textContent = title;
+    document.getElementById('a4-resumo-' + i).textContent = resumo;
+    document.getElementById('a4-body-' + i).textContent = artigo;
+    document.getElementById('a4-author-' + i).textContent = name;
+    document.getElementById('a4-avatar-' + i).textContent = name ? name.split(' ').map(function(w){return w[0];}).join('').slice(0,2).toUpperCase() : '';
+    document.getElementById('a4-source-' + i).textContent = fonte;
+
+    var tagsEl = document.querySelectorAll('#a4-tags-' + i + ' span');
+    tags.forEach(function(t, idx){ if(tagsEl[idx]) tagsEl[idx].textContent = t.value; });
+  }
+}
+
+function openArticle(event, n){
+  event.preventDefault();
+  syncFields();
+  var card = document.querySelectorAll('.editor-grid .card')[n-1];
+  var title = card.querySelector('.field input').value || 'Sem t\u00edtulo';
+  var artigo = card.querySelector('textarea.artigo').value || 'Nenhum conteudo preenchido ainda.';
+  var fieldsArr = card.querySelectorAll('.field');
+  var fonte = fieldsArr[fieldsArr.length-1].querySelector('input').value;
+  var name = card.querySelector('.card__name').value || 'Autor';
+  var tags = card.querySelectorAll('.tag-input');
+
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').textContent = artigo;
+  document.getElementById('modal-meta').textContent = name + ' \u00b7 Jun 2026';
+  document.getElementById('modal-source').textContent = fonte ? ('Fonte: ' + fonte) : '';
+
+  var tagsWrap = document.getElementById('modal-tags');
+  tagsWrap.innerHTML = '';
+  tags.forEach(function(t, idx){
+    if(t.value){
+      var span = document.createElement('span');
+      span.className = 't' + (idx+1);
+      span.textContent = t.value;
+      tagsWrap.appendChild(span);
+    }
+  });
+
+  var imgPreview = document.getElementById('img-preview-' + n);
+  var modalImg = document.getElementById('modal-img');
+  if(imgPreview.src && imgPreview.style.display !== 'none'){
+    modalImg.innerHTML = '<img src="' + imgPreview.src + '" style="display:block">';
+  } else {
+    modalImg.innerHTML = 'Imagem 1200x480';
+  }
+
+  document.getElementById('article-modal').classList.add('open');
+}
+
+function closeArticle(){
+  document.getElementById('article-modal').classList.remove('open');
+}
+</script>
+</body>
+</html>
